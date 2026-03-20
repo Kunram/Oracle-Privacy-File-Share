@@ -24,3 +24,12 @@ This project solves the "data privacy vs. blockchain transparency" dilemma by of
 
 ## 💡 Engineering Highlights
 Designed with gas optimization in mind. Paillier and RSA operations are extremely gas-intensive (exceeding block gas limits if executed directly on EVM). This project delegates the ciphertext generation and homomorphic aggregation to the Python off-chain engine, passing only lightweight proofs and encrypted payloads to the Solidity contract via an Oracle.
+
+## 🧪 Testing Suite
+
+We employ a strict dual-testing environment ensuring both mathematical correctness off-chain and state machine security on-chain.
+
+**Python Cryptography Tests (pytest):**
+```bash
+pip install -r crypto_engine/requirements.txt
+pytest tests/python/ -v
