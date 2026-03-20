@@ -1,35 +1,43 @@
 # Oracle-Privacy-File-Share
 Something written during University
 
-# Decentralized Oracle-Based Privacy File Sharing 🛡️
 
-A hybrid Web3 architecture for secure file sharing, leveraging **Oracle Networks** and **Privacy-Preserving Computation (Homomorphic Encryption)**.
+A proof-of-concept (PoC) architecture for privacy-preserving file sharing. It leverages an off-chain oracle network to handle heavy cryptographic computations (Homomorphic Encryption & RSA), keeping the on-chain EVM footprint minimal and Gas-efficient.
 
-## 🌟 Core Architecture
-This project solves the "data privacy vs. blockchain transparency" dilemma by offloading heavy cryptographic operations to an off-chain oracle node, while maintaining access control and verifiable state on-chain.
+## Architecture Design
 
-### Cryptographic Modules
-1. **Hybrid Encryption (AES + RSA)**:
-   - Large files are symmetrically encrypted using `AES-256-GCM` before being uploaded to IPFS.
-   - The AES session key is asymmetrically encrypted via `RSA-2048` using the intended recipient's public key.
-2. **Additive Homomorphic Encryption (Paillier)**:
-   - Used for privacy-preserving billing and download statistics. 
-   - Node operators can aggregate encrypted download counts without ever decrypting the underlying data, adhering to the property: 
-     $$E(m_1) \cdot E(m_2) = E(m_1 + m_2)$$
+The system decouples data storage, key distribution, and billing aggregation:
 
-## 🛠 Tech Stack
-- **On-chain**: Solidity `^0.8.19` (Data registry & Access control)
-- **Off-chain Oracle**: Python (PyCryptodome for AES/RSA, `phe` for Paillier)
-- **Storage**: IPFS (InterPlanetary File System)
+1. **Hybrid Cipher (AES + RSA):** Payloads are symmetrically encrypted via `AES-256-GCM`. The ephemeral session keys are then wrapped using `RSA-OAEP` (2048-bit) against the recipient's public key.
+2. **Homomorphic Billing (Paillier):** Download metrics and billing data are encrypted using the Paillier cryptosystem. Oracle nodes perform additive homomorphic aggregation (`E(a) * E(b) = E(a + b)`) off-chain without accessing the private key.
+3. **On-chain State (Solidity):** A gas-optimized EVM contract utilizes `AccessControl` for Oracle node authorization and state machine enforcement (preventing CID collisions and unauthorized mutations).
 
-## 💡 Engineering Highlights
-Designed with gas optimization in mind. Paillier and RSA operations are extremely gas-intensive (exceeding block gas limits if executed directly on EVM). This project delegates the ciphertext generation and homomorphic aggregation to the Python off-chain engine, passing only lightweight proofs and encrypted payloads to the Solidity contract via an Oracle.
+## Repository Structure
 
-## 🧪 Testing Suite
+- `contracts/`: EVM smart contracts (Solidity).
+- `crypto_engine/`: Off-chain cryptographic primitives (Python).
+- `tests/`: Dual-environment test suites (Foundry & Pytest).
 
-We employ a strict dual-testing environment ensuring both mathematical correctness off-chain and state machine security on-chain.
+## Quick Start
 
-**Python Cryptography Tests (pytest):**
+### 1. Off-chain Cryptographic Engine
+Requires Python 3.10+.
+
 ```bash
-pip install -r crypto_engine/requirements.txt
+cd crypto_engine
+pip install -r requirements.txt
+cd ..
 pytest tests/python/ -v
+```
+
+### 2. On-chain Oracle Contract
+Requires [Foundry](https://getfoundry.sh/).
+
+```bash
+forge build
+forge test -vvv
+```
+
+## Security Notice
+
+This repository is a PoC demonstrating cryptographic architectural patterns. The Paillier off-chain aggregation is implemented to bypass EVM block gas limits on heavy mathematical operations. For production, the Python engine should be replaced with a secure enclave (TEE) or a Rust-based node implementation.
