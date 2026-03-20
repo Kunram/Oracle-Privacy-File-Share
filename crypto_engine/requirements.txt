@@ -1,1 +1,6 @@
+# Cryptographic primitives (AES-256-GCM, RSA-OAEP)
+# Note: Use pycryptodome instead of the deprecated pycrypto
+pycryptodome>=3.19.0
 
+# Partially Homomorphic Encryption (Paillier algorithm)
+phe>=1.5.0
